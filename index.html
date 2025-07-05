@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 7 Science Quiz - Levels</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .main-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .quiz-container, .level-selection-screen, .level-complete-screen, .final-results-screen, .review-screen {
+            background-color: #f8fafc;
+        }
+        .option-btn, .level-btn {
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover, .level-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .level-btn:disabled {
+            background-color: #e5e7eb;
+            cursor: not-allowed;
+            color: #9ca3af;
+        }
+        .correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .timer-bar {
+            transition: width 30s linear;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .review-card {
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="main-screen text-white text-center p-8 rounded-2xl shadow-2xl max-w-lg mx-auto fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Science Quiz Adventure!</h1>
+        <p class="text-lg md:text-xl mb-6">Test your knowledge from Class 7 Science. Complete levels to unlock new challenges.</p>
+        
+        <div class="my-6">
+            <input type="text" id="name-input" placeholder="Enter your name" class="w-full px-4 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-white/50">
+        </div>
+
+        <div class="my-6 text-left max-w-md mx-auto">
+            <h2 class="text-2xl font-semibold mb-3 text-center">Topics Covered:</h2>
+            <ul class="list-none bg-white/20 p-4 rounded-lg space-y-2 text-center">
+                <li><i class="fas fa-seedling mr-2 text-green-300"></i>Nutrition in Plants</li>
+                <li><i class="fas fa-paw mr-2 text-yellow-300"></i>Nutrition in Animals</li>
+                <li><i class="fas fa-flask mr-2 text-blue-300"></i>Acids, Bases, and Salts</li>
+                <li><i class="fas fa-fire mr-2 text-red-300"></i>Physical and Chemical Changes</li>
+            </ul>
+        </div>
+
+        <button id="start-btn" class="bg-white text-indigo-600 font-bold py-3 px-8 rounded-full text-xl hover:bg-gray-200 transition-all duration-300 shadow-lg hover:shadow-xl mt-4">Let's Go!</button>
+        
+        <p class="mt-8 text-sm text-white/70">© 2024 | Made by Sourav sir</p>
+    </div>
+
+    <!-- Level Selection Screen -->
+    <div id="level-selection-screen" class="hidden w-full max-w-2xl mx-auto p-8 rounded-2xl shadow-2xl fade-in">
+        <h1 id="level-selection-greeting" class="text-3xl font-bold text-gray-800 mb-6 text-center">Select a Level</h1>
+        <div id="level-buttons-container" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <!-- Level buttons will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Quiz Container -->
+    <div id="quiz-container" class="hidden w-full max-w-3xl mx-auto p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl quiz-container fade-in">
+        <div id="quiz-header" class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-700">Level <span id="level-number"></span>: Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+            <div class="text-lg font-semibold text-indigo-600">Score: <span id="score">0</span></div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+            <div id="timer-bar" class="bg-indigo-500 h-2.5 rounded-full" style="width: 100%"></div>
+        </div>
+        <div id="question-card" class="mb-6">
+            <p id="question-text" class="text-xl md:text-2xl font-semibold text-gray-800 mb-6"></p>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+    </div>
+
+    <!-- Level Complete Screen -->
+    <div id="level-complete-screen" class="hidden text-center p-8 rounded-2xl shadow-2xl max-w-lg mx-auto bg-white fade-in">
+        <h1 id="level-complete-title" class="text-4xl font-bold text-gray-800 mb-4"></h1>
+        <p class="text-2xl text-gray-600 mb-2">Level Score:</p>
+        <p id="level-score" class="text-6xl font-bold text-indigo-600 mb-8"></p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button id="next-level-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-green-600 transition-all duration-300 shadow-lg">Next Level</button>
+            <button id="retry-level-btn" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-indigo-700 transition-all duration-300 shadow-lg">Try Again</button>
+            <button id="review-mistakes-btn" class="bg-yellow-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-yellow-600 transition-all duration-300 shadow-lg hidden">Review Mistakes</button>
+            <button id="back-to-levels-btn" class="bg-gray-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-gray-600 transition-all duration-300 shadow-lg">Back to Levels</button>
+        </div>
+    </div>
+    
+    <!-- Review Screen -->
+    <div id="review-screen" class="hidden w-full max-w-3xl mx-auto p-8 rounded-2xl shadow-2xl fade-in review-screen">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Review Your Mistakes</h1>
+        <div id="review-container" class="space-y-6 max-h-[60vh] overflow-y-auto pr-4">
+            <!-- Wrong answers will be populated here -->
+        </div>
+        <div class="text-center mt-8">
+            <button id="back-from-review-btn" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-indigo-700 transition-all duration-300 shadow-lg">Back to Results</button>
+        </div>
+    </div>
+
+    <!-- Final Results Screen -->
+    <div id="final-results-screen" class="hidden text-center p-8 rounded-2xl shadow-2xl max-w-lg mx-auto bg-white fade-in">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Congratulations!</h1>
+        <p class="text-xl text-gray-600 mb-2">You have completed all levels!</p>
+        <p class="text-2xl text-gray-600 mb-2">Your Total Score:</p>
+        <p id="final-score" class="text-6xl font-bold text-indigo-600 mb-8"></p>
+        <button id="restart-btn" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full text-xl hover:bg-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">Play Again</button>
+    </div>
+
+    <!-- Explanation Modal -->
+    <div id="explanation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full text-center fade-in">
+            <h2 id="explanation-title" class="text-2xl font-bold mb-4"></h2>
+            <p id="explanation-text" class="text-gray-700 mb-6"></p>
+            <button id="next-question-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-full hover:bg-indigo-700 transition-all duration-300">Next Question</button>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            // Full list of 100 questions remains here...
+            { question: "What is the process by which green plants make their own food?", options: ["Respiration", "Photosynthesis", "Transpiration", "Pollination"], answer: "Photosynthesis", explanation: "Photosynthesis is the process where green plants use sunlight, water, and carbon dioxide to create their own food (glucose) and release oxygen." },
+            { question: "What are organisms that make their own food from simple substances called?", options: ["Heterotrophs", "Saprotrophs", "Autotrophs", "Parasites"], answer: "Autotrophs", explanation: "Autotrophs are organisms that can produce their own food, using materials from inorganic sources." },
+            { question: "Which part of the plant is known as the 'food factory'?", options: ["Roots", "Stem", "Flower", "Leaves"], answer: "Leaves", explanation: "Leaves are the primary sites of photosynthesis, the process of food production in plants." },
+            { question: "What are the tiny pores on the surface of leaves through which gases enter?", options: ["Stomata", "Chloroplasts", "Guard cells", "Veins"], answer: "Stomata", explanation: "Stomata are small openings on the epidermis of leaves, crucial for gas exchange." },
+            { question: "Which pigment is responsible for the green color of plants and traps sunlight?", options: ["Carotene", "Xanthophyll", "Chlorophyll", "Anthocyanin"], answer: "Chlorophyll", explanation: "Chlorophyll is the green pigment in chloroplasts that absorbs light energy from the sun for photosynthesis." },
+            { question: "Which of these is an insectivorous plant?", options: ["Cuscuta", "Mushroom", "Pitcher Plant", "Lichen"], answer: "Pitcher Plant", explanation: "Insectivorous plants like the Pitcher Plant trap insects to supplement their nutrient intake, especially nitrogen." },
+            { question: "A relationship where two organisms live together and mutually benefit is called:", options: ["Parasitism", "Symbiosis", "Saprophytism", "Predation"], answer: "Symbiosis", explanation: "Symbiosis is a close interaction where both organisms benefit, like in lichens (algae and fungus)." },
+            { question: "Which bacteria, found in root nodules, can fix atmospheric nitrogen?", options: ["Lactobacillus", "Rhizobium", "E. coli", "Streptococcus"], answer: "Rhizobium", explanation: "Rhizobium bacteria convert atmospheric nitrogen into a usable form for leguminous plants." },
+            { question: "Plants that derive food from dead and decaying matter are called:", options: ["Parasites", "Autotrophs", "Saprotrophs", "Insectivores"], answer: "Saprotrophs", explanation: "Saprotrophs, like fungi, decompose dead organic matter for nutrients." },
+            { question: "Cuscuta (Amarbel) is an example of a:", options: ["Saprotroph", "Parasite", "Autotroph", "Symbiont"], answer: "Parasite", explanation: "Cuscuta is a parasitic plant that absorbs nutrients directly from a host plant." },
+            { question: "The breakdown of complex food into simpler substances is called:", options: ["Ingestion", "Assimilation", "Egestion", "Digestion"], answer: "Digestion", explanation: "Digestion is the process of breaking down large food molecules into smaller ones that can be absorbed." },
+            { question: "Which is the largest gland in the human body?", options: ["Pancreas", "Salivary Gland", "Liver", "Adrenal Gland"], answer: "Liver", explanation: "The liver is the largest gland, producing bile juice which aids in fat digestion." },
+            { question: "Finger-like outgrowths in the small intestine are called:", options: ["Villi", "Cilia", "Pseudopodia", "Tentacles"], answer: "Villi", explanation: "Villi increase the surface area of the small intestine for efficient absorption of digested food." },
+            { question: "Amoeba uses which of the following to engulf food?", options: ["Cilia", "Flagella", "Tentacles", "Pseudopodia"], answer: "Pseudopodia", explanation: "Amoeba uses pseudopodia (false feet) to surround and engulf food particles." },
+            { question: "Grass-eating animals that re-chew their food are called:", options: ["Carnivores", "Omnivores", "Ruminants", "Herbivores"], answer: "Ruminants", explanation: "Ruminants have a specialized digestive system to digest tough plant matter by regurgitating and re-chewing it as cud." },
+            { question: "Digestion of starch begins in the:", options: ["Stomach", "Small Intestine", "Buccal cavity (Mouth)", "Large Intestine"], answer: "Buccal cavity (Mouth)", explanation: "Starch digestion starts in the mouth with the enzyme amylase found in saliva." },
+            { question: "Which acid is produced in the stomach?", options: ["Sulphuric Acid", "Acetic Acid", "Hydrochloric Acid", "Nitric Acid"], answer: "Hydrochloric Acid", explanation: "The stomach produces hydrochloric acid to kill bacteria and provide an acidic environment for enzymes." },
+            { question: "The process of removing undigested waste is called:", options: ["Digestion", "Absorption", "Assimilation", "Egestion"], answer: "Egestion", explanation: "Egestion is the removal of undigested waste materials from the body." },
+            { question: "Which teeth are used for tearing food?", options: ["Incisors", "Canines", "Premolars", "Molars"], answer: "Canines", explanation: "Canines are pointed teeth used for gripping and tearing food." },
+            { question: "Bile juice is secreted by the:", options: ["Pancreas", "Stomach", "Liver", "Small Intestine"], answer: "Liver", explanation: "The liver produces bile, which emulsifies fats, breaking them into smaller droplets." },
+            { question: "Substances that are sour in taste are generally:", options: ["Acids", "Bases", "Salts", "Neutral"], answer: "Acids", explanation: "Acids have a characteristic sour taste, like lemon juice (citric acid)." },
+            { question: "What color does blue litmus paper turn in an acidic solution?", options: ["Blue", "Red", "Green", "Yellow"], answer: "Red", explanation: "Acids turn blue litmus paper red, a common test for acidity." },
+            { question: "Substances that are bitter and feel soapy are:", options: ["Acids", "Bases", "Salts", "Indicators"], answer: "Bases", explanation: "Bases are known for their bitter taste and soapy feel, like baking soda solution." },
+            { question: "The reaction between an acid and a base is known as:", options: ["Oxidation", "Reduction", "Neutralisation", "Decomposition"], answer: "Neutralisation", explanation: "A neutralisation reaction between an acid and a base produces salt and water." },
+            { question: "Which of the following is a natural indicator?", options: ["Phenolphthalein", "Methyl Orange", "Turmeric", "Litmus Paper"], answer: "Turmeric", explanation: "Turmeric is a natural indicator that turns red in basic solutions." },
+            { question: "What is the acid present in an ant sting?", options: ["Acetic acid", "Formic acid", "Citric acid", "Lactic acid"], answer: "Formic acid", explanation: "An ant's sting injects formic acid, causing irritation. It can be neutralised by a mild base." },
+            { question: "The nature of tooth paste is generally:", options: ["Acidic", "Basic", "Neutral", "Corrosive"], answer: "Basic", explanation: "Toothpastes are basic to neutralize the acids produced by bacteria in the mouth, preventing tooth decay." },
+            { question: "What color does phenolphthalein turn in a basic solution?", options: ["Colorless", "Red", "Yellow", "Pink"], answer: "Pink", explanation: "Phenolphthalein is a synthetic indicator that turns pink in basic solutions." },
+            { question: "What are the products of a neutralisation reaction?", options: ["Acid and Base", "Salt and Water", "Acid and Water", "Base and Salt"], answer: "Salt and Water", explanation: "A neutralisation reaction always yields a salt and water." },
+            { question: "Which of the following is a strong acid?", options: ["Acetic acid", "Citric acid", "Sulphuric acid", "Lactic acid"], answer: "Sulphuric acid", explanation: "Sulphuric acid is a strong mineral acid, while the others are weaker organic acids." },
+            { question: "Which of the following is a physical change?", options: ["Rusting of iron", "Burning of paper", "Melting of ice", "Digestion of food"], answer: "Melting of ice", explanation: "Melting is a physical change of state from solid to liquid; no new substance is formed." },
+            { question: "A change in which a new substance is formed is called a:", options: ["Physical change", "Chemical change", "Reversible change", "Temporary change"], answer: "Chemical change", explanation: "A chemical change results in new substances with different properties." },
+            { question: "The process of depositing a layer of zinc on iron is called:", options: ["Painting", "Oiling", "Galvanisation", "Crystallisation"], answer: "Galvanisation", explanation: "Galvanisation protects iron from rusting by coating it with a protective layer of zinc." },
+            { question: "Rusting of iron requires the presence of:", options: ["Oxygen only", "Water only", "Both oxygen and water", "Nitrogen and carbon dioxide"], answer: "Both oxygen and water", explanation: "Iron rusts when it is exposed to both oxygen and moisture." },
+            { question: "Which is an example of a chemical change?", options: ["Tearing paper", "Boiling water", "Dissolving sugar in water", "Burning a magnesium ribbon"], answer: "Burning a magnesium ribbon", explanation: "Burning magnesium creates a new substance, magnesium oxide, in a chemical reaction that releases light and heat." },
+            { question: "Obtaining large pure crystals from a solution is known as:", options: ["Evaporation", "Sublimation", "Crystallisation", "Condensation"], answer: "Crystallisation", explanation: "Crystallisation is a technique used to purify solids by forming crystals from a solution." },
+            { question: "What is the chemical name for rust?", options: ["Iron Sulphide", "Iron Carbonate", "Iron(III) Oxide", "Iron Chloride"], answer: "Iron(III) Oxide", explanation: "Rust is hydrated iron(III) oxide, formed by the reaction of iron with oxygen and water." },
+            { question: "Cutting a log of wood into pieces is a:", options: ["Chemical change", "Irreversible physical change", "Physical change", "Both A and B"], answer: "Physical change", explanation: "Cutting wood is a physical change as it only alters its size and shape, not its chemical nature." },
+            { question: "When baking soda is mixed with vinegar, bubbles are formed. This is a:", options: ["Physical change", "Chemical change", "No change", "Melting process"], answer: "Chemical change", explanation: "The bubbles are carbon dioxide gas, a new substance formed from the reaction, indicating a chemical change." },
+            { question: "Stainless steel is an alloy of iron with:", options: ["Copper and Tin", "Zinc and Lead", "Chromium and Nickel", "Aluminum and Magnesium"], answer: "Chromium and Nickel", explanation: "Adding chromium and nickel to iron creates stainless steel, an alloy that is resistant to rust." },
+            { question: "What is the ultimate source of energy for all living organisms?", options: ["Water", "Soil", "Sun", "Moon"], answer: "Sun", explanation: "The Sun provides the energy for photosynthesis, which is the base of almost all food chains on Earth." },
+            { question: "Which animals eat both plants and animals?", options: ["Herbivores", "Carnivores", "Omnivores", "Decomposers"], answer: "Omnivores", explanation: "Omnivores, like humans and bears, have a diet that includes both plant and animal matter." },
+            { question: "The process of taking food into the body is called:", options: ["Digestion", "Ingestion", "Absorption", "Egestion"], answer: "Ingestion", explanation: "Ingestion is the act of eating or taking food into the mouth." },
+            { question: "What is the name of the food pipe?", options: ["Trachea", "Oesophagus", "Larynx", "Intestine"], answer: "Oesophagus", explanation: "The oesophagus is the muscular tube that connects the throat (pharynx) with the stomach." },
+            { question: "Which part of the digestive system absorbs water?", options: ["Small intestine", "Large intestine", "Stomach", "Liver"], answer: "Large intestine", explanation: "The large intestine's primary role is to absorb water from the remaining indigestible food matter." },
+            { question: "What is the sticky film on teeth called?", options: ["Enamel", "Dentine", "Plaque", "Pulp"], answer: "Plaque", explanation: "Plaque is a sticky film of bacteria and food debris that forms on teeth and can cause decay." },
+            { question: "Which teeth are for grinding and chewing?", options: ["Incisors", "Canines", "Premolars and Molars", "All of them"], answer: "Premolars and Molars", explanation: "Premolars and molars have flat surfaces designed for grinding food." },
+            { question: "What is the re-chewed food of a ruminant called?", options: ["Chyme", "Cud", "Bile", "Faeces"], answer: "Cud", explanation: "Ruminants regurgitate partially digested food, known as cud, to chew it more completely." },
+            { question: "Which substance can ruminants digest but humans cannot?", options: ["Starch", "Protein", "Fat", "Cellulose"], answer: "Cellulose", explanation: "Ruminants have symbiotic bacteria that can break down cellulose, a major component of plant cell walls." },
+            { question: "The process of using absorbed food for energy and growth is:", options: ["Egestion", "Digestion", "Assimilation", "Absorption"], answer: "Assimilation", explanation: "Assimilation is when the body's cells utilize the absorbed nutrients for various life processes." },
+            { question: "What acid is in citrus fruits?", options: ["Lactic acid", "Acetic acid", "Citric acid", "Tartaric acid"], answer: "Citric acid", explanation: "Citrus fruits like lemons and oranges contain citric acid, giving them their sour taste." },
+            { question: "Which of these is a strong base?", options: ["Ammonium hydroxide", "Sodium hydroxide", "Magnesium hydroxide", "Copper hydroxide"], answer: "Sodium hydroxide", explanation: "Sodium hydroxide (caustic soda) is a strong base that fully ionizes in water." },
+            { question: "What is the common name for Calcium Hydroxide?", options: ["Limewater", "Vinegar", "Baking soda", "Washing soda"], answer: "Limewater", explanation: "An aqueous solution of calcium hydroxide is called limewater." },
+            { question: "China rose indicator turns acidic solutions what color?", options: ["Green", "Dark pink (magenta)", "Yellow", "Blue"], answer: "Dark pink (magenta)", explanation: "China rose indicator turns acidic solutions to magenta and basic solutions to green." },
+            { question: "How is acidic soil treated?", options: ["Manure", "Vinegar", "Quicklime or Slaked lime", "Salt"], answer: "Quicklime or Slaked lime", explanation: "Acidic soil is neutralized by adding a base like quicklime (calcium oxide) or slaked lime (calcium hydroxide)." },
+            { question: "A solid changing directly to a gas is called:", options: ["Melting", "Freezing", "Evaporation", "Sublimation"], answer: "Sublimation", explanation: "Sublimation is the transition of a substance directly from the solid to the gas state." },
+            { question: "Burning a candle involves:", options: ["Only a physical change", "Only a chemical change", "Both physical and chemical changes", "Neither"], answer: "Both physical and chemical changes", explanation: "Melting wax is physical; burning it is chemical." },
+            { question: "CO2 turns limewater milky due to the formation of:", options: ["Calcium Carbonate", "Calcium Oxide", "Calcium Hydroxide", "Carbonic Acid"], answer: "Calcium Carbonate", explanation: "The milky precipitate formed is calcium carbonate, which is insoluble in water." },
+            { question: "Formation of manure from leaves is a:", options: ["Physical change", "Chemical change", "Reversible change", "No change"], answer: "Chemical change", explanation: "Decomposition of leaves into manure is a complex chemical process." },
+            { question: "An apple turning brown is a:", options: ["It changes color", "It reacts with oxygen", "A new substance is formed", "All of the above"], answer: "All of the above", explanation: "The browning is a chemical reaction (oxidation) that forms new compounds." },
+            { question: "Which organism uses cilia to sweep food?", options: ["Amoeba", "Paramecium", "Hydra", "Frog"], answer: "Paramecium", explanation: "Paramecium uses its cilia to create water currents to bring food into its oral groove." },
+            { question: "How many permanent teeth does an adult have?", options: ["20", "28", "32", "36"], answer: "32", explanation: "A full set of adult permanent teeth consists of 32 teeth." },
+            { question: "What is the hardest substance in the body?", options: ["Bone", "Dentine", "Enamel", "Pulp"], answer: "Enamel", explanation: "Tooth enamel is the hardest and most highly mineralized substance in the body." },
+            { question: "The small intestine is about how long?", options: ["1.5 meters", "3 meters", "5 meters", "7.5 meters"], answer: "7.5 meters", explanation: "The small intestine is remarkably long to maximize nutrient absorption." },
+            { question: "Main function of the large intestine?", options: ["Digest proteins", "Digest fats", "Absorb nutrients", "Absorb water and salts"], answer: "Absorb water and salts", explanation: "The large intestine compacts waste and reclaims water and electrolytes." },
+            { question: "Which acid is in vinegar?", options: ["Formic acid", "Citric acid", "Acetic acid", "Lactic acid"], answer: "Acetic acid", explanation: "Vinegar is essentially a dilute solution of acetic acid." },
+            { question: "Chemical formula for water?", options: ["CO2", "O2", "H2O", "NaCl"], answer: "H2O", explanation: "A water molecule consists of two hydrogen atoms bonded to one oxygen atom." },
+            { question: "What color does turmeric paper turn in a base?", options: ["Stays yellow", "Turns blue", "Turns red", "Becomes colorless"], answer: "Turns red", explanation: "The curcumin in turmeric acts as an indicator, turning red in basic conditions." },
+            { question: "Common name for Sodium Bicarbonate?", options: ["Washing Soda", "Baking Soda", "Caustic Soda", "Bleaching Powder"], answer: "Baking Soda", explanation: "Sodium Bicarbonate is the chemical name for common baking soda." },
+            { question: "A liquid changing to a gas is called:", options: ["Condensation", "Freezing", "Evaporation", "Melting"], answer: "Evaporation", explanation: "Evaporation is the process of a liquid turning into a gas at its surface." },
+            { question: "Main food product of photosynthesis?", options: ["Oxygen", "Carbon Dioxide", "Glucose", "Water"], answer: "Glucose", explanation: "Plants produce glucose (a sugar) as their primary energy source through photosynthesis." },
+            { question: "Which is NOT required for photosynthesis?", options: ["Sunlight", "Chlorophyll", "Oxygen", "Carbon Dioxide"], answer: "Oxygen", explanation: "Oxygen is a waste product of photosynthesis; it is released, not consumed." },
+            { question: "Nutrition mode in fungi?", options: ["Autotrophic", "Parasitic", "Saprotrophic", "Symbiotic"], answer: "Saprotrophic", explanation: "Fungi feed by absorbing nutrients from dead organic matter, which is saprotrophic nutrition." },
+            { question: "First set of teeth in infancy?", options: ["Permanent teeth", "Wisdom teeth", "Milk teeth", "Canines"], answer: "Milk teeth", explanation: "The first set of teeth are called milk teeth or deciduous teeth." },
+            { question: "Chewing food is also known as:", options: ["Mastication", "Ingestion", "Peristalsis", "Assimilation"], answer: "Mastication", explanation: "Mastication is the mechanical grinding of food by the teeth." },
+            { question: "Wave-like muscle contractions in the digestive tract?", options: ["Circulation", "Respiration", "Peristalsis", "Flexion"], answer: "Peristalsis", explanation: "Peristalsis propels food down the digestive tract." },
+            { question: "Which organ produces pancreatic juice?", options: ["Liver", "Stomach", "Pancreas", "Gall bladder"], answer: "Pancreas", explanation: "The pancreas secretes digestive enzymes into the small intestine." },
+            { question: "Acid in sour milk and curd?", options: ["Citric acid", "Lactic acid", "Acetic acid", "Formic acid"], answer: "Lactic acid", explanation: "Lactic acid is formed by the fermentation of lactose in milk." },
+            { question: "A solution that doesn't change litmus color is:", options: ["Acidic", "Basic", "Neutral", "Salty"], answer: "Neutral", explanation: "Neutral solutions have a pH of 7 and do not affect litmus." },
+            { question: "Which is a reversible change?", options: ["Burning wood", "Rusting iron", "Folding a paper", "Baking a cake"], answer: "Folding a paper", explanation: "Folding is a physical change that can be easily reversed by unfolding." },
+            { question: "The green color of leaves is due to:", options: ["Stomata", "Chloroplasts", "Chlorophyll", "Veins"], answer: "Chlorophyll", explanation: "Chlorophyll is the pigment that absorbs sunlight for photosynthesis." },
+            { question: "Gas released during photosynthesis?", options: ["Carbon Dioxide", "Nitrogen", "Oxygen", "Hydrogen"], answer: "Oxygen", explanation: "Plants release oxygen as a byproduct of photosynthesis." },
+            { question: "A frog's sticky tongue is for:", options: ["Ingestion", "Procuring food", "Digestion", "Assimilation"], answer: "Procuring food", explanation: "It's a specialized adaptation for catching prey." },
+            { question: "The four types of teeth are incisors, canines, premolars, and ____.", options: ["Bicuspids", "Molars", "Wisdom teeth", "Frontals"], answer: "Molars", explanation: "Molars are the large teeth at the back of the mouth used for grinding." },
+            { question: "Base used in whitewashing?", options: ["Sodium Hydroxide", "Calcium Hydroxide", "Ammonium Hydroxide", "Magnesium Hydroxide"], answer: "Calcium Hydroxide", explanation: "Slaked lime (calcium hydroxide) is used for whitewashing walls." },
+            { question: "Taste of a base?", options: ["Sour", "Sweet", "Salty", "Bitter"], answer: "Bitter", explanation: "A characteristic property of bases is a bitter taste." },
+            { question: "Digesting food is what type of change?", options: ["Physical", "Chemical", "Reversible", "Temporary"], answer: "Chemical", explanation: "Digestion breaks down food into entirely new chemical substances." },
+            { question: "Water vapor turning to liquid is:", options: ["Evaporation", "Condensation", "Sublimation", "Melting"], answer: "Condensation", explanation: "Condensation is the change from a gaseous to a liquid state." },
+            { question: "Chemical symbol for Iron?", options: ["I", "Ir", "Fe", "Au"], answer: "Fe", explanation: "Fe comes from the Latin word 'ferrum'." },
+            { question: "Dissolving salt in water is a:", options: ["Chemical change", "Physical change", "Permanent change", "Irreversible change"], answer: "Physical change", explanation: "The salt and water are not chemically altered and can be separated." },
+            { question: "Producers of the food chain?", options: ["Carnivores", "Green plants (Autotrophs)", "Herbivores", "Omnivores"], answer: "Green plants (Autotrophs)", explanation: "Autotrophs produce their own food and support the rest of the food web." },
+            { question: "Function of roots in photosynthesis?", options: ["Absorb CO2", "Absorb sunlight", "Absorb water and minerals", "Produce food"], answer: "Absorb water and minerals", explanation: "Roots are essential for taking up water, a key reactant in photosynthesis." },
+            { question: "A spider's web is for:", options: ["Digesting food", "Building a home", "Procuring food", "Reproducing"], answer: "Procuring food", explanation: "The web is a trap for catching the spider's meals." },
+            { question: "Final digestion and absorption occurs in the:", options: ["Stomach", "Large Intestine", "Small Intestine", "Mouth"], answer: "Small Intestine", explanation: "The vast majority of nutrient absorption happens in the small intestine." },
+            { question: "Which is NOT a mineral acid?", options: ["Hydrochloric acid", "Sulphuric acid", "Nitric acid", "Citric acid"], answer: "Citric acid", explanation: "Citric acid is a weak organic acid, unlike the strong mineral acids listed." }
+        ];
+
+        // --- DOM Elements ---
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const levelSelectionScreen = document.getElementById('level-selection-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const levelCompleteScreen = document.getElementById('level-complete-screen');
+        const reviewScreen = document.getElementById('review-screen');
+        const finalResultsScreen = document.getElementById('final-results-screen');
+        const explanationModal = document.getElementById('explanation-modal');
+
+        const nameInput = document.getElementById('name-input');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const nextLevelBtn = document.getElementById('next-level-btn');
+        const retryLevelBtn = document.getElementById('retry-level-btn');
+        const backToLevelsBtn = document.getElementById('back-to-levels-btn');
+        const reviewMistakesBtn = document.getElementById('review-mistakes-btn');
+        const backFromReviewBtn = document.getElementById('back-from-review-btn');
+        
+        const levelSelectionGreeting = document.getElementById('level-selection-greeting');
+        const levelButtonsContainer = document.getElementById('level-buttons-container');
+        const levelNumberEl = document.getElementById('level-number');
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const scoreEl = document.getElementById('score');
+        const finalScoreEl = document.getElementById('final-score');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const timerBar = document.getElementById('timer-bar');
+        const reviewContainer = document.getElementById('review-container');
+
+        const explanationTitleEl = document.getElementById('explanation-title');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const levelCompleteTitleEl = document.getElementById('level-complete-title');
+        const levelScoreEl = document.getElementById('level-score');
+
+        // --- State Variables ---
+        let levels = {};
+        let playerName = '';
+        let currentLevel = 1;
+        let unlockedLevel = 1;
+        let totalScore = 0;
+        let score = 0;
+        let questionsForCurrentLevel = [];
+        let currentQuestionInLevelIndex = 0;
+        let wrongAnswers = [];
+        let timer;
+        const PASSING_SCORE = 10;
+        const NUM_LEVELS = 7;
+
+        // --- Functions ---
+
+        function initializeQuiz() {
+            let questionIndex = 0;
+            for (let i = 1; i <= NUM_LEVELS; i++) {
+                const questionsPerLevel = (i < NUM_LEVELS) ? 15 : 10;
+                levels[i] = allQuestions.slice(questionIndex, questionIndex + questionsPerLevel);
+                questionIndex += questionsPerLevel;
+            }
+            
+            unlockedLevel = parseInt(localStorage.getItem('scienceQuizUnlockedLevel') || '1');
+            totalScore = parseInt(localStorage.getItem('scienceQuizTotalScore') || '0');
+            playerName = localStorage.getItem('scienceQuizPlayerName') || '';
+            if(playerName) {
+                nameInput.value = playerName;
+            }
+            showScreen(welcomeScreen);
+        }
+
+        function showScreen(screen) {
+            [welcomeScreen, levelSelectionScreen, quizContainer, levelCompleteScreen, finalResultsScreen, reviewScreen].forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        }
+
+        function handleStart() {
+            playerName = nameInput.value.trim();
+            if (!playerName) {
+                alert("Please enter your name to start!"); // A simple alert is fine for this case
+                return;
+            }
+            localStorage.setItem('scienceQuizPlayerName', playerName);
+            showLevelSelection();
+        }
+
+        function showLevelSelection() {
+            levelSelectionGreeting.innerText = `Welcome, ${playerName}! Select a Level`;
+            showScreen(levelSelectionScreen);
+            levelButtonsContainer.innerHTML = '';
+            unlockedLevel = parseInt(localStorage.getItem('scienceQuizUnlockedLevel') || '1');
+            
+            for (let i = 1; i <= NUM_LEVELS; i++) {
+                const button = document.createElement('button');
+                button.classList.add('level-btn', 'w-full', 'font-bold', 'py-4', 'px-2', 'rounded-lg', 'shadow-md');
+                
+                if (i <= unlockedLevel) {
+                    button.innerHTML = `Level ${i}`;
+                    button.classList.add('bg-white', 'text-indigo-600');
+                    button.onclick = () => startLevel(i);
+                } else {
+                    button.innerHTML = `Level ${i} <i class="fas fa-lock ml-2"></i>`;
+                    button.disabled = true;
+                }
+                levelButtonsContainer.appendChild(button);
+            }
+        }
+
+        function startLevel(level) {
+            currentLevel = level;
+            currentQuestionInLevelIndex = 0;
+            score = 0;
+            wrongAnswers = [];
+            scoreEl.innerText = score;
+            
+            questionsForCurrentLevel = [...levels[level]];
+            shuffleArray(questionsForCurrentLevel);
+            
+            levelNumberEl.innerText = currentLevel;
+            totalQuestionsEl.innerText = questionsForCurrentLevel.length;
+            
+            showScreen(quizContainer);
+            loadQuestion();
+        }
+        
+        function loadQuestion() {
+            resetState();
+            if (currentQuestionInLevelIndex < questionsForCurrentLevel.length) {
+                const currentQuestion = questionsForCurrentLevel[currentQuestionInLevelIndex];
+                questionNumberEl.innerText = currentQuestionInLevelIndex + 1;
+                questionTextEl.innerText = currentQuestion.question;
+                
+                const shuffledOptions = [...currentQuestion.options];
+                shuffleArray(shuffledOptions);
+                shuffledOptions.forEach(option => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.classList.add('option-btn', 'w-full', 'bg-white', 'text-gray-700', 'font-semibold', 'py-3', 'px-4', 'border', 'border-gray-300', 'rounded-lg', 'text-left', 'shadow-sm');
+                    button.addEventListener('click', () => selectAnswer(button, option));
+                    optionsContainer.appendChild(button);
+                });
+                startTimer();
+            } else {
+                showLevelComplete();
+            }
+        }
+
+        function showLevelComplete() {
+            showScreen(levelCompleteScreen);
+            levelScoreEl.innerText = `${score} / ${questionsForCurrentLevel.length}`;
+            
+            const isPassed = score >= PASSING_SCORE;
+            const isLastLevel = currentLevel === NUM_LEVELS;
+
+            if (wrongAnswers.length > 0) {
+                reviewMistakesBtn.classList.remove('hidden');
+            } else {
+                reviewMistakesBtn.classList.add('hidden');
+            }
+
+            if (isPassed) {
+                levelCompleteTitleEl.innerText = "Level Complete!";
+                levelCompleteTitleEl.className = "text-4xl font-bold text-green-600 mb-4";
+                
+                if (currentLevel >= unlockedLevel) {
+                    totalScore += score;
+                    localStorage.setItem('scienceQuizTotalScore', totalScore);
+                }
+
+                if (!isLastLevel) {
+                    unlockedLevel = Math.max(unlockedLevel, currentLevel + 1);
+                    localStorage.setItem('scienceQuizUnlockedLevel', unlockedLevel);
+                    nextLevelBtn.classList.remove('hidden');
+                    nextLevelBtn.onclick = () => startLevel(currentLevel + 1);
+                } else {
+                    nextLevelBtn.classList.remove('hidden');
+                    nextLevelBtn.innerText = "See Final Results";
+                    nextLevelBtn.onclick = showFinalResults;
+                }
+                retryLevelBtn.classList.add('hidden');
+
+            } else {
+                levelCompleteTitleEl.innerText = "Try Again!";
+                levelCompleteTitleEl.className = "text-4xl font-bold text-red-500 mb-4";
+                nextLevelBtn.classList.add('hidden');
+                retryLevelBtn.classList.remove('hidden');
+                retryLevelBtn.onclick = () => startLevel(currentLevel);
+            }
+        }
+        
+        function showReviewScreen() {
+            showScreen(reviewScreen);
+            reviewContainer.innerHTML = '';
+            wrongAnswers.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('review-card', 'bg-white', 'p-4', 'rounded-lg', 'shadow');
+                card.innerHTML = `
+                    <p class="font-semibold text-gray-800 mb-2">${item.question}</p>
+                    <p class="text-red-500">Your Answer: <span class="font-medium">${item.userAnswer}</span></p>
+                    <p class="text-green-600">Correct Answer: <span class="font-medium">${item.correctAnswer}</span></p>
+                    <p class="text-gray-600 mt-2 text-sm">${item.explanation}</p>
+                `;
+                reviewContainer.appendChild(card);
+            });
+        }
+
+        function showFinalResults() {
+            showScreen(finalResultsScreen);
+            finalScoreEl.innerText = `${totalScore} / 100`;
+        }
+        
+        function resetGame() {
+            localStorage.removeItem('scienceQuizUnlockedLevel');
+            localStorage.removeItem('scienceQuizTotalScore');
+            localStorage.removeItem('scienceQuizPlayerName');
+            totalScore = 0;
+            currentLevel = 1;
+            unlockedLevel = 1;
+            playerName = '';
+            nameInput.value = '';
+            initializeQuiz();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function startTimer() {
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+            timerBar.offsetHeight; 
+            timerBar.style.transition = 'width 30s linear';
+            timerBar.style.width = '0%';
+            timer = setTimeout(handleTimeout, 30000);
+        }
+        
+        function handleTimeout() {
+            clearInterval(timer);
+            const currentQuestion = questionsForCurrentLevel[currentQuestionInLevelIndex];
+            wrongAnswers.push({
+                question: currentQuestion.question,
+                userAnswer: "No Answer (Timeout)",
+                correctAnswer: currentQuestion.answer,
+                explanation: currentQuestion.explanation
+            });
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+            });
+            showExplanation(false);
+        }
+
+        function resetState() {
+            clearTimeout(timer);
+            optionsContainer.innerHTML = '';
+            explanationModal.classList.add('hidden');
+        }
+
+        function selectAnswer(selectedButton, selectedOption) {
+            clearTimeout(timer);
+            const currentQuestion = questionsForCurrentLevel[currentQuestionInLevelIndex];
+            const correct = selectedOption === currentQuestion.answer;
+
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+                if (button.innerText === currentQuestion.answer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            if (correct) {
+                score++;
+                scoreEl.innerText = score;
+                selectedButton.classList.add('correct');
+                showExplanation(true);
+            } else {
+                selectedButton.classList.add('incorrect');
+                wrongAnswers.push({
+                    question: currentQuestion.question,
+                    userAnswer: selectedOption,
+                    correctAnswer: currentQuestion.answer,
+                    explanation: currentQuestion.explanation
+                });
+                showExplanation(false);
+            }
+        }
+
+        function showExplanation(isCorrect) {
+            const currentQuestion = questionsForCurrentLevel[currentQuestionInLevelIndex];
+            if (isCorrect) {
+                explanationTitleEl.innerText = "Correct!";
+                explanationTitleEl.className = "text-2xl font-bold mb-4 text-green-600";
+            } else {
+                explanationTitleEl.innerText = "Not quite...";
+                explanationTitleEl.className = "text-2xl font-bold mb-4 text-red-600";
+            }
+            explanationTextEl.innerHTML = `<strong>The correct answer is: ${currentQuestion.answer}.</strong><br><br>${currentQuestion.explanation}`;
+            explanationModal.classList.remove('hidden');
+        }
+
+        function handleNextQuestion() {
+            currentQuestionInLevelIndex++;
+            loadQuestion();
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', handleStart);
+        restartBtn.addEventListener('click', resetGame);
+        nextQuestionBtn.addEventListener('click', handleNextQuestion);
+        backToLevelsBtn.addEventListener('click', showLevelSelection);
+        reviewMistakesBtn.addEventListener('click', showReviewScreen);
+        backFromReviewBtn.addEventListener('click', showLevelComplete);
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', initializeQuiz);
+
+    </script>
+</body>
+</html>
